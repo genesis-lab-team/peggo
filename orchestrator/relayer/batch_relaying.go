@@ -133,7 +133,7 @@ func (s *peggyRelayer) RelayBatches(
 			return err
 		}
 
-		s.logger.Info().Msg("Test MSG!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+		s.logger.Info().Str("token_contract", batch.Batch.TokenContract).Str("batches", len(batches)).Msg("Test MSG!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
 		// now we iterate through batches per token type
 		for _, batch := range batches {
