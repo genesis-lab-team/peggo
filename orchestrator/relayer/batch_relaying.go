@@ -133,6 +133,8 @@ func (s *peggyRelayer) RelayBatches(
 			return err
 		}
 
+		s.logger.Info().Msg("Test MSG!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
 		// now we iterate through batches per token type
 		for _, batch := range batches {
 			if batch.Batch.BatchTimeout < ethBlockHeight {
