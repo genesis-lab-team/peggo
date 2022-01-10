@@ -133,6 +133,8 @@ func (s *gravityRelayer) RelayBatches(
 			return err
 		}
 
+		s.logger.Debug().Msg("Test MSG!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
 		// now we iterate through batches per token type
 		for _, batch := range batches {
 			if batch.Batch.BatchTimeout < ethBlockHeight {
