@@ -119,6 +119,9 @@ func (s *peggyRelayer) RelayBatches(
 
 	for tokenContract, batches := range possibleBatches {
 
+		s.logger.Info().Int("batches", len(batches)).Msg("Batches count")
+		startPossibleBatchesLoop := time.Now()
+
 		// Requests data from Ethereum only once per token type, this is valid because we are
 		// iterating from oldest to newest, so submitting a batch earlier in the loop won't
 		// ever invalidate submitting a batch later in the loop. Another relayer could always
@@ -132,8 +135,6 @@ func (s *peggyRelayer) RelayBatches(
 			s.logger.Err(err).Msg("failed to get latest Ethereum batch")
 			return err
 		}
-
-		s.logger.Info().Int("batches", len(batches)).Msg("Test MSG!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
 		// now we iterate through batches per token type
 		for _, batch := range batches {
@@ -193,6 +194,8 @@ func (s *peggyRelayer) RelayBatches(
 			s.lastSentBatchNonce = batch.Batch.BatchNonce
 		}
 
+		durationPossibleBatchesLoop := time.Since(startPossibleBatchesLoop)
+		s.logger.Info().Int64("PossibleBatchesLoopTime", durationPossibleBatchesLoop.Nanoseconds()).Msg("Possible Batches Loop Time")
 	}
 
 	return nil
