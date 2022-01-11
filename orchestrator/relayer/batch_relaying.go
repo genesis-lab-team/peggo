@@ -169,7 +169,7 @@ func (s *peggyRelayer) RelayBatches(
 			}
 
 			//estimatedGasCostTest := 1500000
-			var gasPriceTest *big.Int := 2600
+			var gasPriceTest *big.Int = 2600
 			
 			gP := decimal.NewFromBigInt(gasPriceTest, -18)
 
