@@ -162,19 +162,22 @@ func (s *peggyRelayer) RelayBatches(
 				return err
 			}
 
-			// estimatedGasCost, gasPrice, err := s.peggyContract.EstimateGas(ctx, s.peggyContract.Address(), txData)
-			// if err != nil {
-			// 	s.logger.Err(err).Msg("failed to estimate gas cost")
-			// 	return err
-			// }
+			estimatedGasCost, gasPrice, err := s.peggyContract.EstimateGas(ctx, s.peggyContract.Address(), txData)
+			if err != nil {
+				s.logger.Err(err).Msg("failed to estimate gas cost")
+				return err
+			}
 
-			var estimatedGasCost uint64 = 1500000
-			gasPrice := big.NewInt(1500000000)
+			// var estimatedGasCost uint64 = 1500000
+			// gasPrice := big.NewInt(1500000000)
 			
-			gP := decimal.NewFromBigInt(gasPrice, -18)
+			// gP := decimal.NewFromBigInt(gasPrice, -18)
+
+			// durationBatch1 := time.Since(startBatch)
+			// s.logger.Info().Float64("GasPrice", gP.InexactFloat64()).Uint64("GasCost", estimatedGasCost).Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
 
 			durationBatch1 := time.Since(startBatch)
-			s.logger.Info().Float64("GasPrice", gP.InexactFloat64()).Uint64("GasCost", estimatedGasCost).Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
+			s.logger.Info().Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
 
 			// If the batch is not profitable, move on to the next one.
 			if !s.IsBatchProfitable(ctx, batch.Batch, estimatedGasCost, gasPrice, s.profitMultiplier) {
@@ -183,15 +186,15 @@ func (s *peggyRelayer) RelayBatches(
 				continue
 			}
 
-			// Checking in pending txs(mempool) if tx with same input is already submitted
-			// We have to check this at the last moment because any other relayer could have submitted.
-			// if s.peggyContract.IsPendingTxInput(txData, s.pendingTxWait) {
-			// 	s.logger.Error().
-			// 		Msg("Transaction with same batch input data is already present in mempool")
-			// 		durationBatch := time.Since(startBatch)
-			// 		s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Profitable, alchemy is not ok")
-			// 	continue
-			// }
+			Checking in pending txs(mempool) if tx with same input is already submitted
+			We have to check this at the last moment because any other relayer could have submitted.
+			if s.peggyContract.IsPendingTxInput(txData, s.pendingTxWait) {
+				s.logger.Error().
+					Msg("Transaction with same batch input data is already present in mempool")
+					durationBatch := time.Since(startBatch)
+					s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Profitable, alchemy is not ok")
+				continue
+			}
 
 			durationBatch := time.Since(startBatch)
 			s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Profitable, alchemy is ok")
@@ -213,8 +216,8 @@ func (s *peggyRelayer) RelayBatches(
 			s.lastSentBatchNonce = batch.Batch.BatchNonce
 		}
 
-		durationPossibleBatchesLoop := time.Since(startPossibleBatchesLoop)
-		s.logger.Info().Int64("PossibleBatchesLoopTime", durationPossibleBatchesLoop.Nanoseconds()).Msg("Possible Batches Loop Time")
+		// durationPossibleBatchesLoop := time.Since(startPossibleBatchesLoop)
+		// s.logger.Info().Int64("PossibleBatchesLoopTime", durationPossibleBatchesLoop.Nanoseconds()).Msg("Possible Batches Loop Time")
 	}
 
 	return nil
