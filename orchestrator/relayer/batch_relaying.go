@@ -229,7 +229,7 @@ func (s *peggyRelayer) IsBatchProfitable(
 	}
 
 	// First we get the cost of the transaction in USD
-	usdEthPrice := 500
+	usdEthPrice := 500.0
 	usdEthPriceDec := decimal.NewFromFloat(usdEthPrice)
 	totalETHcost := big.NewInt(0).Mul(gasPrice, big.NewInt(int64(ethGasCost)))
 
