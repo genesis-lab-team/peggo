@@ -162,16 +162,16 @@ func (s *peggyRelayer) RelayBatches(
 				return err
 			}
 
-			estimatedGasCost, gasPrice, err := s.peggyContract.EstimateGas(ctx, s.peggyContract.Address(), txData)
-			if err != nil {
-				s.logger.Err(err).Msg("failed to estimate gas cost")
-				return err
-			}
+			// estimatedGasCost, gasPrice, err := s.peggyContract.EstimateGas(ctx, s.peggyContract.Address(), txData)
+			// if err != nil {
+			// 	s.logger.Err(err).Msg("failed to estimate gas cost")
+			// 	return err
+			// }
 
-			//estimatedGasCostTest := 1500000
-			gasPriceTest := big.NewInt(2600000)
+			estimatedGasCost := 1500000
+			gasPrice := big.NewInt(26000000000)
 			
-			gP := decimal.NewFromBigInt(gasPriceTest, -18)
+			gP := decimal.NewFromBigInt(gasPrice, -18)
 
 			durationBatch1 := time.Since(startBatch)
 			s.logger.Info().Float64("GasPrice", gP.InexactFloat64()).Uint64("GasCost", estimatedGasCost).Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
@@ -185,13 +185,13 @@ func (s *peggyRelayer) RelayBatches(
 
 			// Checking in pending txs(mempool) if tx with same input is already submitted
 			// We have to check this at the last moment because any other relayer could have submitted.
-			if s.peggyContract.IsPendingTxInput(txData, s.pendingTxWait) {
-				s.logger.Error().
-					Msg("Transaction with same batch input data is already present in mempool")
-					durationBatch := time.Since(startBatch)
-					s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Profitable, alchemy is not ok")
-				continue
-			}
+			// if s.peggyContract.IsPendingTxInput(txData, s.pendingTxWait) {
+			// 	s.logger.Error().
+			// 		Msg("Transaction with same batch input data is already present in mempool")
+			// 		durationBatch := time.Since(startBatch)
+			// 		s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Profitable, alchemy is not ok")
+			// 	continue
+			// }
 
 			durationBatch := time.Since(startBatch)
 			s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Profitable, alchemy is ok")
