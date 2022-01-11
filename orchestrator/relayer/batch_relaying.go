@@ -139,6 +139,8 @@ func (s *peggyRelayer) RelayBatches(
 
 		// now we iterate through batches per token type
 		for _, batch := range batches {
+			startBatch := time.Now()
+
 			if batch.Batch.BatchTimeout < ethBlockHeight {
 				s.logger.Debug().
 					Uint64("batch_nonce", batch.Batch.BatchNonce).
@@ -167,6 +169,8 @@ func (s *peggyRelayer) RelayBatches(
 
 			// If the batch is not profitable, move on to the next one.
 			if !s.IsBatchProfitable(ctx, batch.Batch, estimatedGasCost, gasPrice, s.profitMultiplier) {
+				durationBatch := time.Since(startBatch)
+				s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Unprofitable")
 				continue
 			}
 
@@ -175,8 +179,13 @@ func (s *peggyRelayer) RelayBatches(
 			if s.peggyContract.IsPendingTxInput(txData, s.pendingTxWait) {
 				s.logger.Error().
 					Msg("Transaction with same batch input data is already present in mempool")
+					durationBatch := time.Since(startBatch)
+					s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Profitable, alchemy is not ok")
 				continue
 			}
+
+			durationBatch := time.Since(startBatch)
+			s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Profitable, alchemy is ok")
 
 			s.logger.Info().
 				Uint64("latest_batch", batch.Batch.BatchNonce).
