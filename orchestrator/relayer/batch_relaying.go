@@ -168,16 +168,27 @@ func (s *peggyRelayer) RelayBatches(
 				return err
 			}
 
+			totalBatchFees := big.NewInt(0)
+	        for _, tx := range batch.Batch.Transactions {
+		        totalBatchFees = totalBatchFees.Add(tx.Erc20Fee.Amount.BigInt(), totalBatchFees)
+	        }
+
+			totalGasUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(0.000000001773333)
+			// totalGas := totalBatchFees * 0.92
+			// totalGasUsd := totalGas * 1.4
+			// totalGasETH := totalGasUsd / 500
+			// gasPrice := totalGasETH / estimatedGasCost
+
 			// var estimatedGasCost uint64 = 1500000
 			// gasPrice := big.NewInt(1500000000)
 			
-			// gP := decimal.NewFromBigInt(gasPrice, -18)
-
-			// durationBatch1 := time.Since(startBatch)
-			// s.logger.Info().Float64("GasPrice", gP.InexactFloat64()).Uint64("GasCost", estimatedGasCost).Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
+			gP := decimal.NewFromBigInt(totalGasUSD, -18)
 
 			durationBatch1 := time.Since(startBatch)
-			s.logger.Info().Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
+			s.logger.Info().Float64("GasPrice", gP.InexactFloat64()).Uint64("GasCost", estimatedGasCost).Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
+
+			// durationBatch1 := time.Since(startBatch)
+			// s.logger.Info().Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
 
 			// If the batch is not profitable, move on to the next one.
 			if !s.IsBatchProfitable(ctx, batch.Batch, estimatedGasCost, gasPrice, s.profitMultiplier) {
