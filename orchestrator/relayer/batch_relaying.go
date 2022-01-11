@@ -170,7 +170,7 @@ func (s *peggyRelayer) RelayBatches(
 
 			// estimatedGasCost := 6000000
 			
-			gP := decimal.NewFromBigInt(GasPrice, -18)
+			gP := decimal.NewFromBigInt(gasPrice, -18)
 
 			durationBatch1 := time.Since(startBatch)
 			s.logger.Info().Float64("GasPrice", gP.InexactFloat64()).Uint64("GasCost", estimatedGasCost).Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
