@@ -170,6 +170,8 @@ func (s *peggyRelayer) RelayBatches(
 			durationBatch1 := time.Since(startBatch)
 			s.logger.Info().Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
 
+			profit =
+
 			// If the batch is not profitable, move on to the next one.
 			if !s.IsBatchProfitable(ctx, batch.Batch, estimatedGasCost, gasPrice, s.profitMultiplier) {
 				durationBatch := time.Since(startBatch)
@@ -229,11 +231,7 @@ func (s *peggyRelayer) IsBatchProfitable(
 	}
 
 	// First we get the cost of the transaction in USD
-	usdEthPrice, err := s.priceFeeder.QueryETHUSDPrice()
-	if err != nil {
-		s.logger.Err(err).Msg("failed to get ETH price")
-		return false
-	}
+	usdEthPrice = 500
 	usdEthPriceDec := decimal.NewFromFloat(usdEthPrice)
 	totalETHcost := big.NewInt(0).Mul(gasPrice, big.NewInt(int64(ethGasCost)))
 
@@ -241,25 +239,19 @@ func (s *peggyRelayer) IsBatchProfitable(
 	gasCostInUSDDec := decimal.NewFromBigInt(totalETHcost, -18).Mul(usdEthPriceDec)
 
 	// Then we get the fees of the batch in USD
-	decimals, err := s.peggyContract.GetERC20Decimals(
-		ctx,
-		common.HexToAddress(batch.TokenContract),
-		s.peggyContract.FromAddress(),
-	)
-	if err != nil {
-		s.logger.Err(err).Str("token_contract", batch.TokenContract).Msg("failed to get token decimals")
-		return false
-	}
+	decimals = 6
 
-	s.logger.Debug().
-		Uint8("decimals", decimals).
-		Str("token_contract", batch.TokenContract).
-		Msg("got token decimals")
+	// s.logger.Debug().
+	// 	Uint8("decimals", decimals).
+	// 	Str("token_contract", batch.TokenContract).
+	// 	Msg("got token decimals")
 
-	usdTokenPrice, err := s.priceFeeder.QueryUSDPrice(common.HexToAddress(batch.TokenContract))
-	if err != nil {
-		return false
-	}
+	// usdTokenPrice, err := s.priceFeeder.QueryUSDPrice(common.HexToAddress(batch.TokenContract))
+	// if err != nil {
+	// 	return false
+	// }
+
+	usdTokenPrice = 1.4
 
 	// We calculate the total fee in ERC20 tokens
 	totalBatchFees := big.NewInt(0)
