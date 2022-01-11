@@ -118,7 +118,8 @@ func (s *peggyRelayer) RelayBatches(
 
 	//ethBlockHeight := lastEthereumHeader.Number.Uint64()
 
-	for tokenContract, batches := range possibleBatches {
+	//for tokenContract, batches := range possibleBatches {
+	for _, batches := range possibleBatches {
 
 		s.logger.Info().Int("batches", len(batches)).Msg("Batches count")
 		startPossibleBatchesLoop := time.Now()
