@@ -173,7 +173,9 @@ func (s *peggyRelayer) RelayBatches(
 		        totalBatchFees = totalBatchFees.Add(tx.Erc20Fee.Amount.BigInt(), totalBatchFees)
 	        }
 
-			totalGasUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(0.000000001773333)
+			decimals := 6
+			coff := decimal.NewFromFloat(0.000000001773333)
+			totalGasUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(coff)
 			// totalGas := totalBatchFees * 0.92
 			// totalGasUsd := totalGas * 1.4
 			// totalGasETH := totalGasUsd / 500
@@ -182,7 +184,8 @@ func (s *peggyRelayer) RelayBatches(
 			// var estimatedGasCost uint64 = 1500000
 			// gasPrice := big.NewInt(1500000000)
 			
-			gP := decimal.NewFromBigInt(totalGasUSD, -18)
+			//gP := decimal.NewFromBigInt(totalGasUSD, -18)
+			gP := totalGasUSD
 
 			durationBatch1 := time.Since(startBatch)
 			s.logger.Info().Float64("GasPrice", gP.InexactFloat64()).Uint64("GasCost", estimatedGasCost).Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
