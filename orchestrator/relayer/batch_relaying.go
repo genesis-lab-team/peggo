@@ -171,7 +171,7 @@ func (s *peggyRelayer) RelayBatches(
 			// estimatedGasCost := 6000000 
 
 			durationBatch1 := time.Since(startBatch)
-			s.logger.Info().Int("GasPrice", gasPrice).Uint64("GasCost", estimatedGasCost).Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
+			s.logger.Info().Uint64("GasCost", estimatedGasCost).Int64("BatchTime", durationBatch1.Nanoseconds()).Msg(gasPrice)
 
 			// If the batch is not profitable, move on to the next one.
 			if !s.IsBatchProfitable(ctx, batch.Batch, estimatedGasCost, gasPrice, s.profitMultiplier) {
