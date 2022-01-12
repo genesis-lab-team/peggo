@@ -179,9 +179,9 @@ func (s *peggyRelayer) RelayBatches(
 			// totalBatchFeesUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(umeePrice)
 			coff := decimal.NewFromFloat(0.00266)
 			totalFeeETH := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(coff)
-			totalGas := totalFeeETH.Div(decimal.NewFromBigInt(big.NewInt(int64(estimatedGasCost)), -18))
-			// gas := totalGas.Mul(decimal.NewFromInt(1000000000000000000))
-			gasPriceTest := totalGas.BigInt()
+			totalGas := totalFeeETH.Div(decimal.NewFromInt(int64(estimatedGasCost)))
+			gas := totalGas.Mul(decimal.NewFromInt(1000000000000000000))
+			gasPriceTest := gas.BigInt()
 
 			// isProfitable := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit)
 
