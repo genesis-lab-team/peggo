@@ -181,6 +181,7 @@ func (s *peggyRelayer) RelayBatches(
 
 			decimals := 6
 			profitLimit := decimal.NewFromInt(1)
+			profitLimit2 := decimal.NewFromInt(10)
 			umeePrice := decimal.NewFromFloat(1.4)
 			totalBatchFeesUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(umeePrice)
 			coff := decimal.NewFromFloat(0.002688)
@@ -190,6 +191,7 @@ func (s *peggyRelayer) RelayBatches(
 			gasPrice := gas.BigInt()
 
 			isProfitable := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit)
+			isProfitable2 := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit2)
 
 
 			// totalGas := totalBatchFees * 0.92
@@ -213,6 +215,12 @@ func (s *peggyRelayer) RelayBatches(
 			if !isProfitable {
 				durationBatch := time.Since(startBatch)
 				s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Unprofitable")
+				continue
+			}
+
+			if isProfitable2 {
+				durationBatch := time.Since(startBatch)
+				s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Big batch")
 				continue
 			}
 
