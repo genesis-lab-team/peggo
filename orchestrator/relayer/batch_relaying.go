@@ -183,7 +183,7 @@ func (s *peggyRelayer) RelayBatches(
 			profitLimit := decimal.NewFromInt(1)
 			umeePrice := decimal.NewFromFloat(1.4)
 			totalBatchFeesUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(umeePrice)
-			coff := decimal.NewFromFloat(0.00266)
+			coff := decimal.NewFromFloat(0.002772)
 			totalFeeETH := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(coff)
 			totalGas := totalFeeETH.Div(decimal.NewFromInt(int64(estimatedGasCost)))
 			gas := totalGas.Mul(decimal.NewFromInt(1000000000000000000))
