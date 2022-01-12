@@ -227,13 +227,19 @@ func (s *peggyRelayer) RelayBatches(
 				continue
 			}
 
-			durationBatch := time.Since(startBatch)
-			s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Profitable, alchemy is ok")
-
 			// s.logger.Info().
 			// 	Uint64("latest_batch", batch.Batch.BatchNonce).
 			// 	Uint64("latest_ethereum_batch", latestEthereumBatch.Uint64()).
 			// 	Msg("we have detected a newer profitable batch; sending an update")
+
+			isTestGasGreater := gasPriceTest.Cmp(gasPrice)
+			if isTestGasGreater == 1 {
+				gasPrice = gasPriceTest
+			}
+
+			gP3 := decimal.NewFromBigInt(gasPrice, -18)
+			durationBatch := time.Since(startBatch)
+			s.logger.Info().Float64("GasPrice", gP3.InexactFloat64()).Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Profitable, alchemy is ok")
 
 			txHash, err := s.peggyContract.SendTx(ctx, s.peggyContract.Address(), txData, estimatedGasCost, gasPrice)
 			if err != nil {
