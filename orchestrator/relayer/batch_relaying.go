@@ -168,10 +168,16 @@ func (s *peggyRelayer) RelayBatches(
 				return err
 			}
 
+			transactionsInBatch := len(batch.Batch.Transactions)
 			totalBatchFees := big.NewInt(0)
 	        for _, tx := range batch.Batch.Transactions {
 		        totalBatchFees = totalBatchFees.Add(tx.Erc20Fee.Amount.BigInt(), totalBatchFees)
 	        }
+
+			estimatedGasCostTest := transactionsInBatch * 7000 + 530000
+			test1 := decimal.NewFromInt(int64(estimatedGasCostTest)).Mul(decimal.NewFromFloat(1.1))
+			test2 := uint64(test1.IntPart())
+
 
 			decimals := 6
 			// profitLimit := decimal.NewFromInt(1)
@@ -199,7 +205,7 @@ func (s *peggyRelayer) RelayBatches(
 			//gP := totalGasUSD
 
 			durationBatch1 := time.Since(startBatch)
-			s.logger.Info().Float64("GasPrice", gP.InexactFloat64()).Float64("GasPriceTest", gP2.InexactFloat64()).Uint64("GasCost", estimatedGasCost).Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
+			s.logger.Info().Float64("GasPrice", gP.InexactFloat64()).Float64("GasPriceTest", gP2.InexactFloat64()).Uint64("GasCost", estimatedGasCost).Uint64("NewGasCost", test2).Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
 
 			// durationBatch1 := time.Since(startBatch)
 			// s.logger.Info().Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
