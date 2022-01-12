@@ -110,16 +110,16 @@ func (s *peggyRelayer) RelayBatches(
 	possibleBatches map[common.Address][]SubmittableBatch,
 ) error {
 	// first get current block height to check for any timeouts
-	// lastEthereumHeader, err := s.ethProvider.HeaderByNumber(ctx, nil)
-	// if err != nil {
-	// 	s.logger.Err(err).Msg("failed to get last ethereum header")
-	// 	return err
-	// }
+	lastEthereumHeader, err := s.ethProvider.HeaderByNumber(ctx, nil)
+	if err != nil {
+		s.logger.Err(err).Msg("failed to get last ethereum header")
+		return err
+	}
 
-	//ethBlockHeight := lastEthereumHeader.Number.Uint64()
+	ethBlockHeight := lastEthereumHeader.Number.Uint64()
 
 	//for tokenContract, batches := range possibleBatches {
-	for _, batches := range possibleBatches {
+	for tokenContract, batches := range possibleBatches {
 
 		s.logger.Info().Int("batches", len(batches)).Msg("Batches count")
 		// startPossibleBatchesLoop := time.Now()
@@ -128,34 +128,34 @@ func (s *peggyRelayer) RelayBatches(
 		// iterating from oldest to newest, so submitting a batch earlier in the loop won't
 		// ever invalidate submitting a batch later in the loop. Another relayer could always
 		// do that though.
-		// latestEthereumBatch, err := s.peggyContract.GetTxBatchNonce(
-		// 	ctx,
-		// 	tokenContract,
-		// 	s.peggyContract.FromAddress(),
-		// )
-		// if err != nil {
-		// 	s.logger.Err(err).Msg("failed to get latest Ethereum batch")
-		// 	return err
-		// }
+		latestEthereumBatch, err := s.peggyContract.GetTxBatchNonce(
+			ctx,
+			tokenContract,
+			s.peggyContract.FromAddress(),
+		)
+		if err != nil {
+			s.logger.Err(err).Msg("failed to get latest Ethereum batch")
+			return err
+		}
 
 		// now we iterate through batches per token type
 		for _, batch := range batches {
 			startBatch := time.Now()
 
-			// if batch.Batch.BatchTimeout < ethBlockHeight {
-			// 	s.logger.Debug().
-			// 		Uint64("batch_nonce", batch.Batch.BatchNonce).
-			// 		Str("token_contract", batch.Batch.TokenContract).
-			// 		Uint64("batch_timeout", batch.Batch.BatchTimeout).
-			// 		Uint64("eth_block_height", ethBlockHeight).
-			// 		Msg("batch has timed out and can't be submitted")
-			// 	continue
-			// }
+			if batch.Batch.BatchTimeout < ethBlockHeight {
+				s.logger.Debug().
+					Uint64("batch_nonce", batch.Batch.BatchNonce).
+					Str("token_contract", batch.Batch.TokenContract).
+					Uint64("batch_timeout", batch.Batch.BatchTimeout).
+					Uint64("eth_block_height", ethBlockHeight).
+					Msg("batch has timed out and can't be submitted")
+				continue
+			}
 
 			// if the batch is newer than the latest Ethereum batch, we can submit it
-			// if batch.Batch.BatchNonce <= latestEthereumBatch.Uint64() {
-			// 	continue
-			// }
+			if batch.Batch.BatchNonce <= latestEthereumBatch.Uint64() {
+				continue
+			}
 
 			txData, err := s.peggyContract.EncodeTransactionBatch(ctx, currentValset, batch.Batch, batch.Signatures)
 			if err != nil {
