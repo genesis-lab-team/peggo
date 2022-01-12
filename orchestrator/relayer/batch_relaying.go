@@ -162,33 +162,35 @@ func (s *peggyRelayer) RelayBatches(
 				return err
 			}
 
-			// estimatedGasCost, gasPrice, err := s.peggyContract.EstimateGas(ctx, s.peggyContract.Address(), txData)
-			// if err != nil {
-			// 	s.logger.Err(err).Msg("failed to estimate gas cost")
-			// 	return err
-			// }
+			estimatedGasCost, gasPrice, err := s.peggyContract.EstimateGas(ctx, s.peggyContract.Address(), txData)
+			if err != nil {
+				s.logger.Err(err).Msg("failed to estimate gas cost")
+				return err
+			}
 
 			totalBatchFees := big.NewInt(0)
 	        for _, tx := range batch.Batch.Transactions {
 		        totalBatchFees = totalBatchFees.Add(tx.Erc20Fee.Amount.BigInt(), totalBatchFees)
 	        }
 
-			decimals := 6
-			profitLimit := decimal.NewFromInt(1)
-			umeePrice := decimal.NewFromFloat(1.4)
-			totalBatchFeesUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(umeePrice)
-			coff := decimal.NewFromFloat(0.000000001773333)
-			totalGasUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(coff)
-			gas := totalGasUSD.Mul(decimal.NewFromInt(1000000000000000000))
-			gasPrice := gas.BigInt()
+			// decimals := 6
+			// profitLimit := decimal.NewFromInt(1)
+			// umeePrice := decimal.NewFromFloat(1.4)
+			// totalBatchFeesUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(umeePrice)
+			// coff := decimal.NewFromFloat(0.000000001773333)
+			// totalGasUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(coff)
+			// gas := totalGasUSD.Mul(decimal.NewFromInt(1000000000000000000))
+			// gasPrice := gas.BigInt()
 
-			isProfitable := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit)
+			// isProfitable := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit)
+
+			
 			// totalGas := totalBatchFees * 0.92
 			// totalGasUsd := totalGas * 1.4
 			// totalGasETH := totalGasUsd / 500
 			// gasPrice := totalGasETH / estimatedGasCost
 
-			var estimatedGasCost uint64 = 1500000
+			//var estimatedGasCost uint64 = 1500000
 			// gasPrice := big.NewInt(1500000000)
 			
 			gP := decimal.NewFromBigInt(gasPrice, -18)
@@ -201,17 +203,17 @@ func (s *peggyRelayer) RelayBatches(
 			// s.logger.Info().Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
 
 			// If the batch is not profitable, move on to the next one.
-			// if !s.IsBatchProfitable(ctx, batch.Batch, estimatedGasCost, gasPrice, s.profitMultiplier) {
-			// 	durationBatch := time.Since(startBatch)
-			// 	s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Unprofitable")
-			// 	continue
-			// }
-
-			if !isProfitable {
+			if !s.IsBatchProfitable(ctx, batch.Batch, estimatedGasCost, gasPrice, s.profitMultiplier) {
 				durationBatch := time.Since(startBatch)
 				s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Unprofitable")
 				continue
 			}
+
+			// if !isProfitable {
+			// 	durationBatch := time.Since(startBatch)
+			// 	s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Unprofitable")
+			// 	continue
+			// }
 
 			// Checking in pending txs(mempool) if tx with same input is already submitted
 			// We have to check this at the last moment because any other relayer could have submitted.
