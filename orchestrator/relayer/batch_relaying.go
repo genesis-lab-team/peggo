@@ -179,17 +179,17 @@ func (s *peggyRelayer) RelayBatches(
 			estimatedGasCost := uint64(estimatedGasCostDec.IntPart())
 
 
-			// decimals := 6
-			// profitLimit := decimal.NewFromInt(1)
-			// umeePrice := decimal.NewFromFloat(1.4)
-			// totalBatchFeesUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(umeePrice)
-			// coff := decimal.NewFromFloat(0.002772)
-			// totalFeeETH := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(coff)
-			// totalGas := totalFeeETH.Div(decimal.NewFromInt(int64(estimatedGasCost)))
-			// gas := totalGas.Mul(decimal.NewFromInt(1000000000000000000))
-			// gasPrice := gas.BigInt()
+			decimals := 6
+			profitLimit := decimal.NewFromInt(1)
+			umeePrice := decimal.NewFromFloat(1.4)
+			totalBatchFeesUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(umeePrice)
+			coff := decimal.NewFromFloat(0.002688)
+			totalFeeETH := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(coff)
+			totalGas := totalFeeETH.Div(decimal.NewFromInt(int64(estimatedGasCost)))
+			gas := totalGas.Mul(decimal.NewFromInt(1000000000000000000))
+			gasPrice := gas.BigInt()
 
-			// isProfitable := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit)
+			isProfitable := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit)
 
 
 			// totalGas := totalBatchFees * 0.92
@@ -197,8 +197,8 @@ func (s *peggyRelayer) RelayBatches(
 			// totalGasETH := totalGasUsd / 500
 			// gasPrice := totalGasETH / estimatedGasCost
 
-			//var estimatedGasCost uint64 = 1500000
-			gasPrice := big.NewInt(1700000000)
+			// var estimatedGasCost uint64 = 1500000
+			// gasPrice := big.NewInt(1700000000)
 			
 			gP := decimal.NewFromBigInt(gasPrice, -18)
 			// gP2 := decimal.NewFromBigInt(gasPriceTest, -18)
@@ -210,11 +210,11 @@ func (s *peggyRelayer) RelayBatches(
 			// durationBatch1 := time.Since(startBatch)
 			// s.logger.Info().Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
 
-			// if !isProfitable {
-			// 	durationBatch := time.Since(startBatch)
-			// 	s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Unprofitable")
-			// 	continue
-			// }
+			if !isProfitable {
+				durationBatch := time.Since(startBatch)
+				s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Unprofitable")
+				continue
+			}
 
 			// If the batch is not profitable, move on to the next one.
 			if !s.IsBatchProfitable(ctx, batch.Batch, estimatedGasCost, gasPrice, s.profitMultiplier) {
