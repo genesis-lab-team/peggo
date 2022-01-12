@@ -180,16 +180,16 @@ func (s *peggyRelayer) RelayBatches(
 
 
 			decimals := 6
-			// profitLimit := decimal.NewFromInt(1)
-			// umeePrice := decimal.NewFromFloat(1.4)
-			// totalBatchFeesUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(umeePrice)
+			profitLimit := decimal.NewFromInt(1)
+			umeePrice := decimal.NewFromFloat(1.4)
+			totalBatchFeesUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(umeePrice)
 			coff := decimal.NewFromFloat(0.00266)
 			totalFeeETH := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(coff)
 			totalGas := totalFeeETH.Div(decimal.NewFromInt(int64(estimatedGasCost)))
 			gas := totalGas.Mul(decimal.NewFromInt(1000000000000000000))
 			gasPrice := gas.BigInt()
 
-			// isProfitable := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit)
+			isProfitable := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit)
 
 
 			// totalGas := totalBatchFees * 0.92
@@ -210,18 +210,18 @@ func (s *peggyRelayer) RelayBatches(
 			// durationBatch1 := time.Since(startBatch)
 			// s.logger.Info().Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
 
+			if !isProfitable {
+				durationBatch := time.Since(startBatch)
+				s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Unprofitable")
+				continue
+			}
+
 			// If the batch is not profitable, move on to the next one.
 			if !s.IsBatchProfitable(ctx, batch.Batch, estimatedGasCost, gasPrice, s.profitMultiplier) {
 				durationBatch := time.Since(startBatch)
 				s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Unprofitable")
 				continue
 			}
-
-			// if !isProfitable {
-			// 	durationBatch := time.Since(startBatch)
-			// 	s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Unprofitable")
-			// 	continue
-			// }
 
 			// Checking in pending txs(mempool) if tx with same input is already submitted
 			// We have to check this at the last moment because any other relayer could have submitted.
