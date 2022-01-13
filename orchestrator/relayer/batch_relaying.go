@@ -38,7 +38,37 @@ func (s *peggyRelayer) getBatchesAndSignatures(
 		return possibleBatches, nil
 	}
 
+	var batchNonceLast uint64 = 0
+
 	for _, batch := range outTxBatches.Batches {
+		decimals := 6
+		profitLimit := decimal.NewFromInt(9)
+		totalBatchFees := big.NewInt(0)
+	    for _, tx := range batch.Transactions {
+		    totalBatchFees = totalBatchFees.Add(tx.Erc20Fee.Amount.BigInt(), totalBatchFees)
+	    }
+		totalBatchFeesDec := decimal.NewFromBigInt(totalBatchFees, -int32(decimals))
+		isProfitable := totalBatchFeesDec.GreaterThanOrEqual(profitLimit)
+
+		if !isProfitable {
+			s.logger.Info().Msg("Not profitable batch fees too low (NH)")
+			continue
+		}
+
+		if batchNonceLast == 0 || batchNonceLast < batch.BatchNonce {
+			batchNonceLast = batch.BatchNonce
+		}
+	}
+
+	for _, batch := range outTxBatches.Batches {
+
+		if batchNonceLast == 0 {
+			s.logger.Info().Msg("Something is not ok! (batchNonceLast=0)")
+		}
+
+		if batch.BatchNonce != batchNonceLast {
+			continue
+		}
 
 		// We might have already sent this same batch. Skip it.
 		if s.lastSentBatchNonce >= batch.BatchNonce {
@@ -179,19 +209,19 @@ func (s *peggyRelayer) RelayBatches(
 			estimatedGasCost := uint64(estimatedGasCostDec.IntPart())
 
 
-			decimals := 6
-			profitLimit := decimal.NewFromInt(1)
-			profitLimit2 := decimal.NewFromInt(10)
-			umeePrice := decimal.NewFromFloat(1.4)
-			totalBatchFeesUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(umeePrice)
-			coff := decimal.NewFromFloat(0.002688)
-			totalFeeETH := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(coff)
-			totalGas := totalFeeETH.Div(decimal.NewFromInt(int64(estimatedGasCost)))
-			gas := totalGas.Mul(decimal.NewFromInt(1000000000000000000))
-			gasPrice := gas.BigInt()
+			// decimals := 6
+			// profitLimit := decimal.NewFromInt(1)
+			// profitLimit2 := decimal.NewFromInt(10)
+			// umeePrice := decimal.NewFromFloat(1.4)
+			// totalBatchFeesUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(umeePrice)
+			// coff := decimal.NewFromFloat(0.002688)
+			// totalFeeETH := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(coff)
+			// totalGas := totalFeeETH.Div(decimal.NewFromInt(int64(estimatedGasCost)))
+			// gas := totalGas.Mul(decimal.NewFromInt(1000000000000000000))
+			// gasPrice := gas.BigInt()
 
-			isProfitable := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit)
-			isProfitable2 := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit2)
+			// isProfitable := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit)
+			// isProfitable2 := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit2)
 
 
 			// totalGas := totalBatchFees * 0.92
@@ -200,7 +230,7 @@ func (s *peggyRelayer) RelayBatches(
 			// gasPrice := totalGasETH / estimatedGasCost
 
 			// var estimatedGasCost uint64 = 1500000
-			// gasPrice := big.NewInt(1700000000)
+			gasPrice := big.NewInt(1700000000)
 			
 			gP := decimal.NewFromBigInt(gasPrice, -18)
 			// gP2 := decimal.NewFromBigInt(gasPriceTest, -18)
@@ -212,17 +242,17 @@ func (s *peggyRelayer) RelayBatches(
 			// durationBatch1 := time.Since(startBatch)
 			// s.logger.Info().Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
 
-			if !isProfitable {
-				durationBatch := time.Since(startBatch)
-				s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Unprofitable")
-				continue
-			}
+			// if !isProfitable {
+			// 	durationBatch := time.Since(startBatch)
+			// 	s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Unprofitable")
+			// 	continue
+			// }
 
-			if isProfitable2 {
-				durationBatch := time.Since(startBatch)
-				s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Big batch")
-				continue
-			}
+			// if isProfitable2 {
+			// 	durationBatch := time.Since(startBatch)
+			// 	s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Big batch")
+			// 	continue
+			// }
 
 			// If the batch is not profitable, move on to the next one.
 			if !s.IsBatchProfitable(ctx, batch.Batch, estimatedGasCost, gasPrice, s.profitMultiplier) {
