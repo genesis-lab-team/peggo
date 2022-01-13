@@ -51,7 +51,7 @@ func (s *peggyRelayer) getBatchesAndSignatures(
 		isProfitable := totalBatchFeesDec.GreaterThanOrEqual(profitLimit)
 
 		if !isProfitable {
-			s.logger.Info().Msg("Not profitable batch fees too low (NH)")
+			s.logger.Info().Float64("BatchFees", totalBatchFeesDec.InexactFloat64()).Msg("Not profitable batch fees too low (NH)")
 			continue
 		}
 
@@ -63,7 +63,8 @@ func (s *peggyRelayer) getBatchesAndSignatures(
 	for _, batch := range outTxBatches.Batches {
 
 		if batchNonceLast == 0 {
-			s.logger.Info().Msg("Something is not ok! (batchNonceLast=0)")
+			s.logger.Info().Msg("(batchNonceLast=0)")
+			continue
 		}
 
 		if batch.BatchNonce != batchNonceLast {
