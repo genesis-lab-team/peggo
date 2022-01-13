@@ -42,7 +42,7 @@ func (s *peggyRelayer) getBatchesAndSignatures(
 
 	for _, batch := range outTxBatches.Batches {
 		decimals := 6
-		profitLimit := decimal.NewFromInt(5)
+		profitLimit := decimal.NewFromInt(8)
 		totalBatchFees := big.NewInt(0)
 	    for _, tx := range batch.Transactions {
 		    totalBatchFees = totalBatchFees.Add(tx.Erc20Fee.Amount.BigInt(), totalBatchFees)
@@ -58,6 +58,7 @@ func (s *peggyRelayer) getBatchesAndSignatures(
 		if batchNonceLast == 0 || batchNonceLast < batch.BatchNonce {
 			batchNonceLast = batch.BatchNonce
 		}
+		s.logger.Info().Uint64("BatchNonceLast", batchNonceLast).Msg("Profitable!")
 	}
 
 	for _, batch := range outTxBatches.Batches {
