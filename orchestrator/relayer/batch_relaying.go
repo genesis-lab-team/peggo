@@ -212,6 +212,7 @@ func (s *peggyRelayer) RelayBatches(
 
 			// if the batch is newer than the latest Ethereum batch, we can submit it
 			if batch.Batch.BatchNonce <= latestEthereumBatch.Uint64() {
+				s.logger.Info().Msg("Batch is old")
 				continue
 			}
 
