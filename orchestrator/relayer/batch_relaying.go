@@ -40,7 +40,29 @@ func (s *peggyRelayer) getBatchesAndSignatures(
 
 	var batchNonceLast uint64 = 0
 
+	// for _, batch := range outTxBatches.Batches {
+	// 	decimals := 6
+	// 	profitLimit := decimal.NewFromInt(8)
+	// 	totalBatchFees := big.NewInt(0)
+	//     for _, tx := range batch.Transactions {
+	// 	    totalBatchFees = totalBatchFees.Add(tx.Erc20Fee.Amount.BigInt(), totalBatchFees)
+	//     }
+	// 	totalBatchFeesDec := decimal.NewFromBigInt(totalBatchFees, -int32(decimals))
+	// 	isProfitable := totalBatchFeesDec.GreaterThanOrEqual(profitLimit)
+
+	// 	if !isProfitable {
+	// 		s.logger.Info().Float64("BatchFees", totalBatchFeesDec.InexactFloat64()).Msg("Not profitable batch fees too low (NH)")
+	// 		continue
+	// 	}
+
+	// 	if batchNonceLast == 0 || batchNonceLast < batch.BatchNonce {
+	// 		batchNonceLast = batch.BatchNonce
+	// 	}
+	// 	s.logger.Info().Uint64("BatchNonceLast", batchNonceLast).Msg("Profitable!")
+	// }
+
 	for _, batch := range outTxBatches.Batches {
+
 		decimals := 6
 		profitLimit := decimal.NewFromInt(8)
 		totalBatchFees := big.NewInt(0)
@@ -54,23 +76,16 @@ func (s *peggyRelayer) getBatchesAndSignatures(
 			s.logger.Info().Float64("BatchFees", totalBatchFeesDec.InexactFloat64()).Msg("Not profitable batch fees too low (NH)")
 			continue
 		}
+		s.logger.Info().Uint64("BatchNonceLast", batchNonceLast).Msg("Profitable but not singer yet!")	
 
-		if batchNonceLast == 0 || batchNonceLast < batch.BatchNonce {
-			batchNonceLast = batch.BatchNonce
-		}
-		s.logger.Info().Uint64("BatchNonceLast", batchNonceLast).Msg("Profitable!")
-	}
+		// if batchNonceLast == 0 {
+		// 	s.logger.Info().Msg("(batchNonceLast=0)")
+		// 	continue
+		// }
 
-	for _, batch := range outTxBatches.Batches {
-
-		if batchNonceLast == 0 {
-			s.logger.Info().Msg("(batchNonceLast=0)")
-			continue
-		}
-
-		if batch.BatchNonce != batchNonceLast {
-			continue
-		}
+		// if batch.BatchNonce != batchNonceLast {
+		// 	continue
+		// }
 
 		// We might have already sent this same batch. Skip it.
 		if s.lastSentBatchNonce >= batch.BatchNonce {
@@ -110,11 +125,22 @@ func (s *peggyRelayer) getBatchesAndSignatures(
 			continue
 		}
 
+		if batchNonceLast == 0 || batchNonceLast < batch.BatchNonce {
+	    	batchNonceLast = batch.BatchNonce
+			possibleBatches = map[common.Address][]SubmittableBatch{}
+			possibleBatches[common.HexToAddress(batch.TokenContract)] = append(
+				possibleBatches[common.HexToAddress(batch.TokenContract)],
+				SubmittableBatch{Batch: batch, Signatures: batchConfirms.Confirms},
+			)
+			s.logger.Info().Int("possibleBatches", len(possibleBatches)).Msg(" Possible batches count")
+			s.logger.Info().Uint64("BatchNonceLast", batchNonceLast).Msg("Profitable!")	
+	    }
+
 		// if the previous check didn't fail, we can add the batch to the list of possible batches
-		possibleBatches[common.HexToAddress(batch.TokenContract)] = append(
-			possibleBatches[common.HexToAddress(batch.TokenContract)],
-			SubmittableBatch{Batch: batch, Signatures: batchConfirms.Confirms},
-		)
+		// possibleBatches[common.HexToAddress(batch.TokenContract)] = append(
+		// 	possibleBatches[common.HexToAddress(batch.TokenContract)],
+		// 	SubmittableBatch{Batch: batch, Signatures: batchConfirms.Confirms},
+		// )
 	}
 
 	// Order batches by nonce ASC. That means that the next/oldest batch is [0].
