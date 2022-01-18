@@ -254,7 +254,7 @@ func (s *peggyRelayer) IsBatchProfitable(
 	}
 
 	// First we get the cost of the transaction in USD
-	usdEthPrice := 500.0
+	usdEthPrice := 3229.0
 	usdEthPriceDec := decimal.NewFromFloat(usdEthPrice)
 	totalETHcost := big.NewInt(0).Mul(gasPrice, big.NewInt(int64(ethGasCost)))
 
@@ -274,7 +274,7 @@ func (s *peggyRelayer) IsBatchProfitable(
 	// 	return false
 	// }
 
-	usdTokenPrice := 1.4
+	usdTokenPrice := 0.07
 
 	// We calculate the total fee in ERC20 tokens
 	totalBatchFees := big.NewInt(0)
