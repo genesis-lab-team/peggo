@@ -3,7 +3,7 @@ package relayer
 import (
 	"context"
 	"math/big"
-	"sort"
+	// "sort"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -142,15 +142,17 @@ func (s *peggyRelayer) getBatchesAndSignatures(
 			possibleBatches[common.HexToAddress(batch.TokenContract)],
 			SubmittableBatch{Batch: batch, Signatures: batchConfirms.Confirms},
 		)
+
+		break
 	}
 
 	// Order batches by nonce ASC. That means that the next/oldest batch is [0].
-	for tokenAddress := range possibleBatches {
-		tokenAddress := tokenAddress
-		sort.SliceStable(possibleBatches[tokenAddress], func(i, j int) bool {
-			return possibleBatches[tokenAddress][i].Batch.BatchNonce > possibleBatches[tokenAddress][j].Batch.BatchNonce
-		})
-	}
+	// for tokenAddress := range possibleBatches {
+	// 	tokenAddress := tokenAddress
+	// 	sort.SliceStable(possibleBatches[tokenAddress], func(i, j int) bool {
+	// 		return possibleBatches[tokenAddress][i].Batch.BatchNonce > possibleBatches[tokenAddress][j].Batch.BatchNonce
+	// 	})
+	// }
 
 	return possibleBatches, nil
 }
