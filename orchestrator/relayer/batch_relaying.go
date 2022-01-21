@@ -38,7 +38,7 @@ func (s *peggyRelayer) getBatchesAndSignatures(
 		return possibleBatches, nil
 	}
 
-	var batchNonceLast uint64 = 0
+	// var batchNonceLast uint64 = 0
 
 	// for _, batch := range outTxBatches.Batches {
 	// 	decimals := 6
@@ -64,7 +64,7 @@ func (s *peggyRelayer) getBatchesAndSignatures(
 	for _, batch := range outTxBatches.Batches {
 
 		decimals := 6
-		profitLimit := decimal.NewFromInt(8)
+		profitLimit := decimal.NewFromFloat(0.5)
 		totalBatchFees := big.NewInt(0)
 	    for _, tx := range batch.Transactions {
 		    totalBatchFees = totalBatchFees.Add(tx.Erc20Fee.Amount.BigInt(), totalBatchFees)
@@ -76,7 +76,7 @@ func (s *peggyRelayer) getBatchesAndSignatures(
 			s.logger.Info().Float64("BatchFees", totalBatchFeesDec.InexactFloat64()).Msg("Not profitable batch fees too low (NH)")
 			continue
 		}
-		s.logger.Info().Uint64("BatchNonceLast", batchNonceLast).Msg("Profitable but not singer yet!")	
+		s.logger.Info().Msg("Profitable but not singer yet!")	
 
 		// if batchNonceLast == 0 {
 		// 	s.logger.Info().Msg("(batchNonceLast=0)")
@@ -125,22 +125,23 @@ func (s *peggyRelayer) getBatchesAndSignatures(
 			continue
 		}
 
-		if batchNonceLast == 0 || batchNonceLast < batch.BatchNonce {
-	    	batchNonceLast = batch.BatchNonce
-			possibleBatches = map[common.Address][]SubmittableBatch{}
-			possibleBatches[common.HexToAddress(batch.TokenContract)] = append(
-				possibleBatches[common.HexToAddress(batch.TokenContract)],
-				SubmittableBatch{Batch: batch, Signatures: batchConfirms.Confirms},
-			)
-			s.logger.Info().Int("possibleBatches", len(possibleBatches)).Msg(" Possible batches count")
-			s.logger.Info().Uint64("BatchNonceLast", batchNonceLast).Msg("Profitable!")	
-	    }
+		// if batchNonceLast == 0 || batchNonceLast < batch.BatchNonce {
+	    // 	batchNonceLast = batch.BatchNonce
+		// 	possibleBatches = map[common.Address][]SubmittableBatch{}
+		// 	possibleBatches[common.HexToAddress(batch.TokenContract)] = append(
+		// 		possibleBatches[common.HexToAddress(batch.TokenContract)],
+		// 		SubmittableBatch{Batch: batch, Signatures: batchConfirms.Confirms},
+		// 	)
+		// 	s.logger.Info().Int("possibleBatches", len(possibleBatches)).Msg(" Possible batches count")
+		// 	s.logger.Info().Uint64("BatchNonceLast", batchNonceLast).Msg("Profitable!")	
+	    // }
 
+		s.logger.Info().Msg("Profitable and singer!")	
 		// if the previous check didn't fail, we can add the batch to the list of possible batches
-		// possibleBatches[common.HexToAddress(batch.TokenContract)] = append(
-		// 	possibleBatches[common.HexToAddress(batch.TokenContract)],
-		// 	SubmittableBatch{Batch: batch, Signatures: batchConfirms.Confirms},
-		// )
+		possibleBatches[common.HexToAddress(batch.TokenContract)] = append(
+			possibleBatches[common.HexToAddress(batch.TokenContract)],
+			SubmittableBatch{Batch: batch, Signatures: batchConfirms.Confirms},
+		)
 	}
 
 	// Order batches by nonce ASC. That means that the next/oldest batch is [0].
@@ -238,28 +239,28 @@ func (s *peggyRelayer) RelayBatches(
 			estimatedGasCost := uint64(estimatedGasCostDec.IntPart())
 
 
-			// decimals := 6
+			decimals := 6
 			// profitLimit := decimal.NewFromInt(1)
 			// profitLimit2 := decimal.NewFromInt(10)
-			// umeePrice := decimal.NewFromFloat(1.4)
+			// umeePrice := decimal.NewFromFloat(0.07)
 			// totalBatchFeesUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(umeePrice)
-			// coff := decimal.NewFromFloat(0.002688)
-			// totalFeeETH := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(coff)
-			// totalGas := totalFeeETH.Div(decimal.NewFromInt(int64(estimatedGasCost)))
-			// gas := totalGas.Mul(decimal.NewFromInt(1000000000000000000))
-			// gasPrice := gas.BigInt()
+			coff := decimal.NewFromFloat(0.000021461752865)
+			totalFeeETH := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(coff)
+			totalGas := totalFeeETH.Div(decimal.NewFromInt(int64(estimatedGasCost)))
+			gas := totalGas.Mul(decimal.NewFromInt(1000000000000000000))
+			gasPrice := gas.BigInt()
 
 			// isProfitable := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit)
 			// isProfitable2 := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit2)
 
 
-			// totalGas := totalBatchFees * 0.92
-			// totalGasUsd := totalGas * 1.4
-			// totalGasETH := totalGasUsd / 500
+			// totalGas := totalBatchFees * 0.99
+			// totalGasUsd := totalGas * 0.07
+			// totalGasETH := totalGasUsd / 3229
 			// gasPrice := totalGasETH / estimatedGasCost
 
 			// var estimatedGasCost uint64 = 1500000
-			gasPrice := big.NewInt(1700000000)
+			// gasPrice := big.NewInt(1700000000)
 			
 			gP := decimal.NewFromBigInt(gasPrice, -18)
 			// gP2 := decimal.NewFromBigInt(gasPriceTest, -18)
@@ -284,21 +285,21 @@ func (s *peggyRelayer) RelayBatches(
 			// }
 
 			// If the batch is not profitable, move on to the next one.
-			if !s.IsBatchProfitable(ctx, batch.Batch, estimatedGasCost, gasPrice, s.profitMultiplier) {
-				durationBatch := time.Since(startBatch)
-				s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Unprofitable")
-				continue
-			}
+			// if !s.IsBatchProfitable(ctx, batch.Batch, estimatedGasCost, gasPrice, s.profitMultiplier) {
+			// 	durationBatch := time.Since(startBatch)
+			// 	s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Unprofitable")
+			// 	continue
+			// }
 
 			// Checking in pending txs(mempool) if tx with same input is already submitted
 			// We have to check this at the last moment because any other relayer could have submitted.
-			if s.peggyContract.IsPendingTxInput(txData, s.pendingTxWait) {
-				s.logger.Error().
-					Msg("Transaction with same batch input data is already present in mempool")
-					durationBatch := time.Since(startBatch)
-					s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Profitable, alchemy is not ok")
-				continue
-			}
+			// if s.peggyContract.IsPendingTxInput(txData, s.pendingTxWait) {
+			// 	s.logger.Error().
+			// 		Msg("Transaction with same batch input data is already present in mempool")
+			// 		durationBatch := time.Since(startBatch)
+			// 		s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Profitable, alchemy is not ok")
+			// 	continue
+			// }
 
 			// s.logger.Info().
 			// 	Uint64("latest_batch", batch.Batch.BatchNonce).
