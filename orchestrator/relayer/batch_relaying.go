@@ -64,7 +64,7 @@ func (s *peggyRelayer) getBatchesAndSignatures(
 	for _, batch := range outTxBatches.Batches {
 
 		decimals := 6
-		profitLimit := decimal.NewFromFloat(0.5)
+		profitLimit := decimal.NewFromFloat(1)
 		totalBatchFees := big.NewInt(0)
 	    for _, tx := range batch.Transactions {
 		    totalBatchFees = totalBatchFees.Add(tx.Erc20Fee.Amount.BigInt(), totalBatchFees)
@@ -237,6 +237,8 @@ func (s *peggyRelayer) RelayBatches(
 	        }
 
 			estimatedGasCostCalc := transactionsInBatch * 7000 + 530000
+			estimatedGasCostNoAdjDec := decimal.NewFromInt(int64(estimatedGasCostCalc))
+			estimatedGasCostNoAdj := uint64(estimatedGasCostNoAdjDec.IntPart())
 			estimatedGasCostDec := decimal.NewFromInt(int64(estimatedGasCostCalc)).Mul(decimal.NewFromFloat(1.1))
 			estimatedGasCost := uint64(estimatedGasCostDec.IntPart())
 
@@ -246,12 +248,11 @@ func (s *peggyRelayer) RelayBatches(
 			// profitLimit2 := decimal.NewFromInt(10)
 			// umeePrice := decimal.NewFromFloat(0.07)
 			// totalBatchFeesUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(umeePrice)
-			coff := decimal.NewFromFloat(0.000021461752865)
+			coff := decimal.NewFromFloat(0.000021678538247)
 			totalFeeETH := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(coff)
-			totalGas := totalFeeETH.Div(decimal.NewFromInt(int64(estimatedGasCost)))
+			totalGas := totalFeeETH.Div(decimal.NewFromInt(int64(estimatedGasCostNoAdj)))
 			gas := totalGas.Mul(decimal.NewFromInt(1000000000000000000))
 			gasPrice := gas.BigInt()
-
 			// isProfitable := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit)
 			// isProfitable2 := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit2)
 
