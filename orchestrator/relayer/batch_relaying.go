@@ -73,7 +73,7 @@ func (s *peggyRelayer) getBatchesAndSignatures(
 		isProfitable := totalBatchFeesDec.GreaterThanOrEqual(profitLimit)
 
 		if !isProfitable {
-			s.logger.Info().Float64("BatchFees", totalBatchFeesDec.InexactFloat64()).Msg("Not profitable batch fees too low (NH)")
+			// s.logger.Info().Float64("BatchFees", totalBatchFeesDec.InexactFloat64()).Msg("Not profitable batch fees too low (NH)")
 			continue
 		}
 		s.logger.Info().Msg("Profitable but not singer yet!")	
@@ -248,7 +248,9 @@ func (s *peggyRelayer) RelayBatches(
 			// profitLimit2 := decimal.NewFromInt(10)
 			// umeePrice := decimal.NewFromFloat(0.07)
 			// totalBatchFeesUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(umeePrice)
-			coff := decimal.NewFromFloat(0.000021678538247)
+			// 100% 0.000021678538247
+			// 99% 0.000021461752865
+			coff := decimal.NewFromFloat(0.000021461752865)
 			totalFeeETH := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(coff)
 			totalGas := totalFeeETH.Div(decimal.NewFromInt(int64(estimatedGasCostNoAdj)))
 			gas := totalGas.Mul(decimal.NewFromInt(1000000000000000000))
@@ -265,12 +267,12 @@ func (s *peggyRelayer) RelayBatches(
 			// var estimatedGasCost uint64 = 1500000
 			// gasPrice := big.NewInt(1700000000)
 			
-			gP := decimal.NewFromBigInt(gasPrice, -18)
+			// gP := decimal.NewFromBigInt(gasPrice, -18)
 			// gP2 := decimal.NewFromBigInt(gasPriceTest, -18)
 			//gP := totalGasUSD
 
-			durationBatch1 := time.Since(startBatch)
-			s.logger.Info().Float64("GasPrice", gP.InexactFloat64()).Uint64("GasCost", estimatedGasCost).Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
+			// durationBatch1 := time.Since(startBatch)
+			// s.logger.Info().Float64("GasPrice", gP.InexactFloat64()).Uint64("GasCost", estimatedGasCost).Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
 
 			// durationBatch1 := time.Since(startBatch)
 			// s.logger.Info().Int64("BatchTime", durationBatch1.Nanoseconds()).Msg("Below check profit")
