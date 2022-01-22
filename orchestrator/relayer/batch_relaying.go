@@ -64,7 +64,7 @@ func (s *peggyRelayer) getBatchesAndSignatures(
 	for _, batch := range outTxBatches.Batches {
 
 		decimals := 6
-		profitLimit := decimal.NewFromFloat(3)
+		profitLimit := decimal.NewFromFloat(1)
 		totalBatchFees := big.NewInt(0)
 	    for _, tx := range batch.Transactions {
 		    totalBatchFees = totalBatchFees.Add(tx.Erc20Fee.Amount.BigInt(), totalBatchFees)
@@ -251,7 +251,7 @@ func (s *peggyRelayer) RelayBatches(
 			// 100% 0.000021678538247
 			// 99% 0.000021461752865
 			// 30% 0.000006503561474
-			coff := decimal.NewFromFloat(0.000021678538247)
+			coff := decimal.NewFromFloat(0.000006503561474)
 			totalFeeETH := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(coff)
 			totalGas := totalFeeETH.Div(decimal.NewFromInt(int64(estimatedGasCostNoAdj)))
 			gas := totalGas.Mul(decimal.NewFromInt(1000000000000000000))
@@ -299,13 +299,13 @@ func (s *peggyRelayer) RelayBatches(
 
 			// Checking in pending txs(mempool) if tx with same input is already submitted
 			// We have to check this at the last moment because any other relayer could have submitted.
-			// if s.peggyContract.IsPendingTxInput(txData, s.pendingTxWait) {
-			// 	s.logger.Error().
-			// 		Msg("Transaction with same batch input data is already present in mempool")
-			// 		durationBatch := time.Since(startBatch)
-			// 		s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Profitable, alchemy is not ok")
-			// 	continue
-			// }
+			if s.peggyContract.IsPendingTxInput(txData, s.pendingTxWait) {
+				s.logger.Error().
+					Msg("Transaction with same batch input data is already present in mempool")
+					durationBatch := time.Since(startBatch)
+					s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Profitable, alchemy is not ok")
+				continue
+			}
 
 			// s.logger.Info().
 			// 	Uint64("latest_batch", batch.Batch.BatchNonce).

@@ -20,6 +20,8 @@ type PendingTxInputList []PendingTxInput
 // RPCTransaction represents a transaction that will serialize to the RPC representation of a transaction
 type RPCTransaction struct {
 	Input hexutil.Bytes `json:"input"`
+	Gas hexutil.Bytes `json:"gas"`
+	GasPrice hexutil.Bytes `json:"gasPrice"`
 }
 
 // AddPendingTxInput adds pending submitBatch and updateBatch calls to the Peggy contract to the list of pending
@@ -91,6 +93,7 @@ func (s *peggyContract) SubscribeToPendingTxs(ctx context.Context, alchemyWebsoc
 		select {
 		case pendingTransaction := <-ch:
 			s.pendingTxInputList.AddPendingTxInput(pendingTransaction)
+			s.logger.Info().Str("Gas", hexutil.Encode(pendingTransaction.Gas)).Str("GasPrice", hexutil.Encode(pendingTransaction.GasPrice)).Msg("Gas in pending Txs")
 
 		case <-ctx.Done():
 			return nil
