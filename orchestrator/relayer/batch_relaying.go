@@ -239,8 +239,9 @@ func (s *peggyRelayer) RelayBatches(
 			estimatedGasCostCalc := transactionsInBatch * 7000 + 530000
 			estimatedGasCostNoAdjDec := decimal.NewFromInt(int64(estimatedGasCostCalc))
 			estimatedGasCostNoAdj := uint64(estimatedGasCostNoAdjDec.IntPart())
-			estimatedGasCostDec := decimal.NewFromInt(int64(estimatedGasCostCalc)).Mul(decimal.NewFromFloat(1.1))
-			estimatedGasCost := uint64(estimatedGasCostDec.IntPart())
+			//estimatedGasCostDec := decimal.NewFromInt(int64(estimatedGasCostCalc)).Mul(decimal.NewFromFloat(1.1))
+			//estimatedGasCost := uint64(estimatedGasCostDec.IntPart())
+			var estimatedGasCost uint64 = 7000000
 
 
 			decimals := 6
