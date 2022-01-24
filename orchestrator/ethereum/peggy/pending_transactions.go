@@ -13,11 +13,12 @@ import (
 // PendingTxInput contains the data of a pending transaction and the time we first saw it.
 type PendingTxInput struct {
 	InputData    hexutil.Bytes
-	Gas hexutil.Bytes
-	GasPrice hexutil.Bytes
-	TxType string
 	ReceivedTime time.Time
 }
+
+// Gas hexutil.Bytes
+// GasPrice hexutil.Bytes
+// TxType string
 
 type PendingTxInputList []PendingTxInput
 
@@ -50,11 +51,12 @@ func (p *PendingTxInputList) AddPendingTxInput(pendingTx *RPCTransaction) string
 
 	pendingTxInput := PendingTxInput{
 		InputData:    pendingTx.Input,
-		Gas: pendingTx.Gas,
-		GasPrice: pendingTx.GasPrice,
-		TxType: pendingTxType,
 		ReceivedTime: time.Now(),
 	}
+
+	// Gas: pendingTx.Gas,
+	// GasPrice: pendingTx.GasPrice,
+	// TxType: pendingTxType,
 
 	*p = append(*p, pendingTxInput)
 	// Persisting top 100 pending txs of peggy contract only.
@@ -80,24 +82,24 @@ func (s *peggyContract) IsPendingTxInput(txData []byte, pendingTxWaitDuration ti
 }
 
 func (s *peggyContract) MaxGasPrice(pendingTxWaitDuration time.Duration) *big.Int {
-	t := time.Now()
+	// t := time.Now()
 
 	maxGas := big.NewInt(0)
-	for _, pendingTxInput := range s.pendingTxInputList {
-		if !t.Before(pendingTxInput.ReceivedTime.Add(pendingTxWaitDuration)) {
-			// If this tx was for too long in the pending list, consider it stale
-			s.logger.Info().Msg("PendingGas: Query is old!")
-			continue
-		}
-		if pendingTxInput.TxType == "submitBatch" {
-			s.logger.Info().Msg("PendingGas: Calc pending gas")
-			gasPrice := hexutil.MustDecodeBig(hexutil.Encode(pendingTxInput.GasPrice)) 
-			isGasPriceGreater := gasPrice.Cmp(maxGas)
-		    if isGasPriceGreater == 1 {
-				maxGas = gasPrice
-		    }
-		}
-	}
+	// for _, pendingTxInput := range s.pendingTxInputList {
+	// 	if !t.Before(pendingTxInput.ReceivedTime.Add(pendingTxWaitDuration)) {
+	// 		// If this tx was for too long in the pending list, consider it stale
+	// 		s.logger.Info().Msg("PendingGas: Query is old!")
+	// 		continue
+	// 	}
+	// 	if pendingTxInput.TxType == "submitBatch" {
+	// 		s.logger.Info().Msg("PendingGas: Calc pending gas")
+	// 		gasPrice := hexutil.MustDecodeBig(hexutil.Encode(pendingTxInput.GasPrice)) 
+	// 		isGasPriceGreater := gasPrice.Cmp(maxGas)
+	// 	    if isGasPriceGreater == 1 {
+	// 			maxGas = gasPrice
+	// 	    }
+	// 	}
+	// }
 
 	return maxGas
 }
