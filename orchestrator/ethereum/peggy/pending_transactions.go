@@ -30,7 +30,7 @@ type RPCTransaction struct {
 
 // AddPendingTxInput adds pending submitBatch and updateBatch calls to the Peggy contract to the list of pending
 // transactions, any other transaction is ignored.
-func (p *PendingTxInputList) AddPendingTxInput(pendingTx *RPCTransaction) {
+func (p *PendingTxInputList) AddPendingTxInput(pendingTx *RPCTransaction) string {
 
 	submitBatchMethod := peggyABI.Methods["submitBatch"]
 	valsetUpdateMethod := peggyABI.Methods["updateValset"]
@@ -40,7 +40,7 @@ func (p *PendingTxInputList) AddPendingTxInput(pendingTx *RPCTransaction) {
 	// Ref: https://docs.soliditylang.org/en/develop/abi-spec.html#function-selector
 	if !bytes.Equal(submitBatchMethod.ID, pendingTx.Input[:4]) &&
 		!bytes.Equal(valsetUpdateMethod.ID, pendingTx.Input[:4]) {
-		return
+		return ""
 	}
 
 	pendingTxType := "updateValset"
@@ -63,6 +63,8 @@ func (p *PendingTxInputList) AddPendingTxInput(pendingTx *RPCTransaction) {
 		// Dequeue pending tx input
 		*p = (*p)[1:]
 	}
+
+	return pendingTxType
 }
 
 func (s *peggyContract) IsPendingTxInput(txData []byte, pendingTxWaitDuration time.Duration) bool {
@@ -127,8 +129,9 @@ func (s *peggyContract) SubscribeToPendingTxs(ctx context.Context, alchemyWebsoc
 	for {
 		select {
 		case pendingTransaction := <-ch:
-			s.pendingTxInputList.AddPendingTxInput(pendingTransaction)
+			test := s.pendingTxInputList.AddPendingTxInput(pendingTransaction)
 		    // s.logger.Info().Uint64("Gas", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.Gas))).Uint64("GasPrice", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.GasPrice))).Str("TxType",pendingTransaction.TxType).Msg("Gas in pending Txs test")
+			s.logger.Info().Str("TypeTx:", test)
 
 		case <-ctx.Done():
 			return nil
