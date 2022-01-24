@@ -64,7 +64,7 @@ func (s *peggyRelayer) getBatchesAndSignatures(
 	for _, batch := range outTxBatches.Batches {
 
 		decimals := 6
-		profitLimit := decimal.NewFromFloat(7)
+		profitLimit := decimal.NewFromFloat(1)
 		totalBatchFees := big.NewInt(0)
 	    for _, tx := range batch.Transactions {
 		    totalBatchFees = totalBatchFees.Add(tx.Erc20Fee.Amount.BigInt(), totalBatchFees)
