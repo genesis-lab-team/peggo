@@ -203,9 +203,10 @@ func (s *peggyRelayer) RelayBatches(
 
 			decimals := 6
 			profitLimit := decimal.NewFromInt(1)
+			totalBatchFeesDec := decimal.NewFromBigInt(totalBatchFees, -int32(decimals))
 			// profitLimit2 := decimal.NewFromInt(10)
-			umeePrice := decimal.NewFromFloat(0.07)
-			totalBatchFeesUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(umeePrice)
+			// umeePrice := decimal.NewFromFloat(0.07)
+			// totalBatchFeesUSD := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(umeePrice)
 			// 100% 0.000021678538247
 			// 99% 0.000021461752865
 			// 30% 0.000006503561474
@@ -215,13 +216,13 @@ func (s *peggyRelayer) RelayBatches(
 			gas := totalGas.Mul(decimal.NewFromInt(1000000000000000000))
 			maxCalcGasPrice := gas.BigInt()
 
-			coff1 := decimal.NewFromFloat(0.000021461752865)
+			coff1 := decimal.NewFromFloat(0.000006503561474)
 			totalFeeETH1 := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(coff1)
 			totalGas1 := totalFeeETH1.Div(decimal.NewFromInt(int64(estimatedGasCostNoAdj)))
 			gas1 := totalGas1.Mul(decimal.NewFromInt(1000000000000000000))
 			gasPrice := gas1.BigInt()
 
-			isProfitable := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit)
+			isProfitable := totalBatchFeesDec.GreaterThanOrEqual(profitLimit)
 			// isProfitable2 := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit2)
 
 
