@@ -81,6 +81,7 @@ func (s *peggyContract) IsPendingTxInput(txData []byte, pendingTxWaitDuration ti
 
 func (s *peggyContract) MaxGasPrice(pendingTxWaitDuration time.Duration) *big.Int {
 	t := time.Now()
+	s.logger.Info().Msg("PendingGas: In MaxGasFunction")
 
 	maxGas := big.NewInt(0)
 	for _, pendingTxInput := range s.pendingTxInputList {
@@ -89,6 +90,7 @@ func (s *peggyContract) MaxGasPrice(pendingTxWaitDuration time.Duration) *big.In
 			s.logger.Info().Msg("PendingGas: Query is old!")
 			continue
 		}
+		s.logger.Info().Str("TxType", pendingTxInput.TxType).Msg("PendingGas: TxType")
 		if pendingTxInput.TxType == "submitBatch" {
 			s.logger.Info().Msg("PendingGas: Calc pending gas")
 			gasPrice := hexutil.MustDecodeBig(hexutil.Encode(pendingTxInput.GasPrice))
