@@ -181,7 +181,7 @@ func (s *peggyRelayer) RelayBatches(
 				return err
 			}
 
-			_, gasPrice, err := s.peggyContract.EstimateGas(ctx, s.peggyContract.Address(), txData)
+			estimatedGasCostGet, gasPrice, err := s.peggyContract.EstimateGas(ctx, s.peggyContract.Address(), txData)
 			if err != nil {
 				s.logger.Err(err).Msg("failed to estimate gas cost")
 				return err
@@ -249,7 +249,7 @@ func (s *peggyRelayer) RelayBatches(
 			// }
 
 			// If the batch is not profitable, move on to the next one.
-			if !s.IsBatchProfitable(ctx, batch.Batch, estimatedGasCost, gasPrice, s.profitMultiplier) {
+			if !s.IsBatchProfitable(ctx, batch.Batch, estimatedGasCostGet, gasPrice, s.profitMultiplier) {
 				durationBatch := time.Since(startBatch)
 				s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Unprofitable")
 				continue
