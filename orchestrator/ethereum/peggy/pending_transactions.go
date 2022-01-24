@@ -44,7 +44,7 @@ func (p *PendingTxInputList) AddPendingTxInput(pendingTx *RPCTransaction) {
 	}
 
 	pendingTxType := "updateValset"
-	if !bytes.Equal(submitBatchMethod.ID, pendingTx.Input[:4]) {
+	if bytes.Equal(submitBatchMethod.ID, pendingTx.Input[:4]) {
 		pendingTxType = "submitBatch"
 	}
 
@@ -128,7 +128,7 @@ func (s *peggyContract) SubscribeToPendingTxs(ctx context.Context, alchemyWebsoc
 		select {
 		case pendingTransaction := <-ch:
 			s.pendingTxInputList.AddPendingTxInput(pendingTransaction)
-			// s.logger.Info().Uint64("Gas", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.Gas))).Uint64("GasPrice", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.GasPrice))).Msg("Gas in pending Txs")
+		    // s.logger.Info().Uint64("Gas", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.Gas))).Uint64("GasPrice", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.GasPrice))).Str("TxType",pendingTransaction.TxType).Msg("Gas in pending Txs test")
 
 		case <-ctx.Done():
 			return nil
