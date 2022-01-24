@@ -3,7 +3,7 @@ package relayer
 import (
 	"context"
 	"math/big"
-	// "sort"
+	"sort"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -38,59 +38,27 @@ func (s *peggyRelayer) getBatchesAndSignatures(
 		return possibleBatches, nil
 	}
 
-	// var batchNonceLast uint64 = 0
-
-	// for _, batch := range outTxBatches.Batches {
-	// 	decimals := 6
-	// 	profitLimit := decimal.NewFromInt(8)
-	// 	totalBatchFees := big.NewInt(0)
-	//     for _, tx := range batch.Transactions {
-	// 	    totalBatchFees = totalBatchFees.Add(tx.Erc20Fee.Amount.BigInt(), totalBatchFees)
-	//     }
-	// 	totalBatchFeesDec := decimal.NewFromBigInt(totalBatchFees, -int32(decimals))
-	// 	isProfitable := totalBatchFeesDec.GreaterThanOrEqual(profitLimit)
-
-	// 	if !isProfitable {
-	// 		s.logger.Info().Float64("BatchFees", totalBatchFeesDec.InexactFloat64()).Msg("Not profitable batch fees too low (NH)")
-	// 		continue
-	// 	}
-
-	// 	if batchNonceLast == 0 || batchNonceLast < batch.BatchNonce {
-	// 		batchNonceLast = batch.BatchNonce
-	// 	}
-	// 	s.logger.Info().Uint64("BatchNonceLast", batchNonceLast).Msg("Profitable!")
-	// }
-
 	for _, batch := range outTxBatches.Batches {
-
-		decimals := 6
-		profitLimit := decimal.NewFromFloat(1)
-		totalBatchFees := big.NewInt(0)
-	    for _, tx := range batch.Transactions {
-		    totalBatchFees = totalBatchFees.Add(tx.Erc20Fee.Amount.BigInt(), totalBatchFees)
-	    }
-		totalBatchFeesDec := decimal.NewFromBigInt(totalBatchFees, -int32(decimals))
-		isProfitable := totalBatchFeesDec.GreaterThanOrEqual(profitLimit)
-
-		if !isProfitable {
-			// s.logger.Info().Float64("BatchFees", totalBatchFeesDec.InexactFloat64()).Msg("Not profitable batch fees too low (NH)")
-			continue
-		}
-		s.logger.Info().Msg("Profitable but not singer yet!")	
-
-		// if batchNonceLast == 0 {
-		// 	s.logger.Info().Msg("(batchNonceLast=0)")
-		// 	continue
-		// }
-
-		// if batch.BatchNonce != batchNonceLast {
-		// 	continue
-		// }
 
 		// We might have already sent this same batch. Skip it.
 		if s.lastSentBatchNonce >= batch.BatchNonce {
 			continue
 		}
+
+		// decimals := 6
+		// profitLimit := decimal.NewFromFloat(1)
+		// totalBatchFees := big.NewInt(0)
+	    // for _, tx := range batch.Transactions {
+		//     totalBatchFees = totalBatchFees.Add(tx.Erc20Fee.Amount.BigInt(), totalBatchFees)
+	    // }
+		// totalBatchFeesDec := decimal.NewFromBigInt(totalBatchFees, -int32(decimals))
+		// isProfitable := totalBatchFeesDec.GreaterThanOrEqual(profitLimit)
+
+		// if !isProfitable {
+		// 	// s.logger.Info().Float64("BatchFees", totalBatchFeesDec.InexactFloat64()).Msg("Not profitable batch fees too low (NH)")
+		// 	continue
+		// }
+		// s.logger.Info().Msg("Profitable but not singer yet!")	
 
 		batchConfirms, err := s.cosmosQueryClient.BatchConfirms(ctx, &types.QueryBatchConfirmsRequest{
 			Nonce:           batch.BatchNonce,
@@ -125,34 +93,23 @@ func (s *peggyRelayer) getBatchesAndSignatures(
 			continue
 		}
 
-		// if batchNonceLast == 0 || batchNonceLast < batch.BatchNonce {
-	    // 	batchNonceLast = batch.BatchNonce
-		// 	possibleBatches = map[common.Address][]SubmittableBatch{}
-		// 	possibleBatches[common.HexToAddress(batch.TokenContract)] = append(
-		// 		possibleBatches[common.HexToAddress(batch.TokenContract)],
-		// 		SubmittableBatch{Batch: batch, Signatures: batchConfirms.Confirms},
-		// 	)
-		// 	s.logger.Info().Int("possibleBatches", len(possibleBatches)).Msg(" Possible batches count")
-		// 	s.logger.Info().Uint64("BatchNonceLast", batchNonceLast).Msg("Profitable!")	
-	    // }
-
-		s.logger.Info().Msg("Profitable and singer!")	
+		// s.logger.Info().Msg("Profitable and singer!")	
 		// if the previous check didn't fail, we can add the batch to the list of possible batches
 		possibleBatches[common.HexToAddress(batch.TokenContract)] = append(
 			possibleBatches[common.HexToAddress(batch.TokenContract)],
 			SubmittableBatch{Batch: batch, Signatures: batchConfirms.Confirms},
 		)
 
-		break
+		// break
 	}
 
 	// Order batches by nonce ASC. That means that the next/oldest batch is [0].
-	// for tokenAddress := range possibleBatches {
-	// 	tokenAddress := tokenAddress
-	// 	sort.SliceStable(possibleBatches[tokenAddress], func(i, j int) bool {
-	// 		return possibleBatches[tokenAddress][i].Batch.BatchNonce > possibleBatches[tokenAddress][j].Batch.BatchNonce
-	// 	})
-	// }
+	for tokenAddress := range possibleBatches {
+		tokenAddress := tokenAddress
+		sort.SliceStable(possibleBatches[tokenAddress], func(i, j int) bool {
+			return possibleBatches[tokenAddress][i].Batch.BatchNonce > possibleBatches[tokenAddress][j].Batch.BatchNonce
+		})
+	}
 
 	return possibleBatches, nil
 }
@@ -180,7 +137,7 @@ func (s *peggyRelayer) RelayBatches(
 	// ethBlockHeight := lastEthereumHeader.Number.Uint64()
 
 	//for tokenContract, batches := range possibleBatches {
-	for _, batches := range possibleBatches {
+	for tokenContract, batches := range possibleBatches {
 
 		s.logger.Info().Int("batches", len(batches)).Msg("Batches count")
 		// startPossibleBatchesLoop := time.Now()
@@ -189,15 +146,15 @@ func (s *peggyRelayer) RelayBatches(
 		// iterating from oldest to newest, so submitting a batch earlier in the loop won't
 		// ever invalidate submitting a batch later in the loop. Another relayer could always
 		// do that though.
-		// latestEthereumBatch, err := s.peggyContract.GetTxBatchNonce(
-		// 	ctx,
-		// 	tokenContract,
-		// 	s.peggyContract.FromAddress(),
-		// )
-		// if err != nil {
-		// 	s.logger.Err(err).Msg("failed to get latest Ethereum batch")
-		// 	return err
-		// }
+		latestEthereumBatch, err := s.peggyContract.GetTxBatchNonce(
+			ctx,
+			tokenContract,
+			s.peggyContract.FromAddress(),
+		)
+		if err != nil {
+			s.logger.Err(err).Msg("failed to get latest Ethereum batch")
+			return err
+		}
 
 		// now we iterate through batches per token type
 		for _, batch := range batches {
@@ -214,21 +171,21 @@ func (s *peggyRelayer) RelayBatches(
 			// }
 
 			// if the batch is newer than the latest Ethereum batch, we can submit it
-			// if batch.Batch.BatchNonce <= latestEthereumBatch.Uint64() {
-			// 	s.logger.Info().Msg("Batch is old")
-			// 	continue
-			// }
+			if batch.Batch.BatchNonce <= latestEthereumBatch.Uint64() {
+				s.logger.Info().Msg("Batch is old")
+				continue
+			}
 
 			txData, err := s.peggyContract.EncodeTransactionBatch(ctx, currentValset, batch.Batch, batch.Signatures)
 			if err != nil {
 				return err
 			}
 
-			// estimatedGasCost, gasPrice, err := s.peggyContract.EstimateGas(ctx, s.peggyContract.Address(), txData)
-			// if err != nil {
-			// 	s.logger.Err(err).Msg("failed to estimate gas cost")
-			// 	return err
-			// }
+			_, gasPrice, err := s.peggyContract.EstimateGas(ctx, s.peggyContract.Address(), txData)
+			if err != nil {
+				s.logger.Err(err).Msg("failed to estimate gas cost")
+				return err
+			}
 
 			transactionsInBatch := len(batch.Batch.Transactions)
 			totalBatchFees := big.NewInt(0)
@@ -256,7 +213,7 @@ func (s *peggyRelayer) RelayBatches(
 			totalFeeETH := decimal.NewFromBigInt(totalBatchFees, -int32(decimals)).Mul(coff)
 			totalGas := totalFeeETH.Div(decimal.NewFromInt(int64(estimatedGasCostNoAdj)))
 			gas := totalGas.Mul(decimal.NewFromInt(1000000000000000000))
-			gasPrice := gas.BigInt()
+			maxCalcGasPrice := gas.BigInt()
 			// isProfitable := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit)
 			// isProfitable2 := totalBatchFeesUSD.GreaterThanOrEqual(profitLimit2)
 
@@ -292,11 +249,11 @@ func (s *peggyRelayer) RelayBatches(
 			// }
 
 			// If the batch is not profitable, move on to the next one.
-			// if !s.IsBatchProfitable(ctx, batch.Batch, estimatedGasCost, gasPrice, s.profitMultiplier) {
-			// 	durationBatch := time.Since(startBatch)
-			// 	s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Unprofitable")
-			// 	continue
-			// }
+			if !s.IsBatchProfitable(ctx, batch.Batch, estimatedGasCost, gasPrice, s.profitMultiplier) {
+				durationBatch := time.Since(startBatch)
+				s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Unprofitable")
+				continue
+			}
 
 			maxPendingGas := s.peggyContract.MaxGasPrice(s.pendingTxWait)
 			gasAdj := decimal.NewFromFloat(1.1)
@@ -304,19 +261,38 @@ func (s *peggyRelayer) RelayBatches(
 			maxPendingGasAdjDecInt := maxPendingGasAdjDec.Mul(decimal.NewFromInt(1000000000000000000))
 			maxPendingGasAdj := maxPendingGasAdjDecInt.BigInt()
 			maxPendingGasAdjD := decimal.NewFromBigInt(maxPendingGasAdj, -18)
-			maxCalcGasDec := decimal.NewFromBigInt(gasPrice, -18)
 			maxPendingGasDec := decimal.NewFromBigInt(maxPendingGas, -18)
-			s.logger.Info().Float64("MaxCalcGas", maxCalcGasDec.InexactFloat64()).Float64("MaxPendingGas", maxPendingGasDec.InexactFloat64()).Float64("MaxPendingGasAdj", maxPendingGasAdjD.InexactFloat64()).Msg("Gas in pending Txs")
+
+			maxCalcGasPriceDec := decimal.NewFromBigInt(maxCalcGasPrice, -18)
+
+			gasPriceDec := decimal.NewFromBigInt(gasPrice, -18)
+
+			s.logger.Info().Float64("MaxCalcGasPrice", maxCalcGasPriceDec.InexactFloat64()).Float64("MaxPendingGas", maxPendingGasDec.InexactFloat64()).Float64("MaxPendingGasAdj", maxPendingGasAdjD.InexactFloat64()).Float64("GasPrice", gasPriceDec.InexactFloat64()).Msg("Gas in pending Txs")
+
+			// isMaxPendingGas0 := maxPendingGas.Cmp(big.NewInt(0))
+			// if isMaxPendingGas0 == 1 {
+			isPendingGasGreater := maxPendingGas.Cmp(gasPrice)
+			if isPendingGasGreater == 1 {
+				gasPrice = maxPendingGasAdj
+			}
+
+			isgasPriceGreater := gasPrice.Cmp(maxCalcGasPrice)
+			if isgasPriceGreater == 1 {
+				s.logger.Info().Msg("The maximum price of gas is exceeded!")
+				continue
+			}
+			s.logger.Info().Msg("Gas is OK!")
+			// }
 
 			// Checking in pending txs(mempool) if tx with same input is already submitted
 			// We have to check this at the last moment because any other relayer could have submitted.
-			if s.peggyContract.IsPendingTxInput(txData, s.pendingTxWait) {
-				s.logger.Error().
-					Msg("Transaction with same batch input data is already present in mempool")
-					durationBatch := time.Since(startBatch)
-					s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Profitable, alchemy is not ok")
-				continue
-			}
+			// if s.peggyContract.IsPendingTxInput(txData, s.pendingTxWait) {
+			// 	s.logger.Error().
+			// 		Msg("Transaction with same batch input data is already present in mempool")
+			// 		durationBatch := time.Since(startBatch)
+			// 		s.logger.Info().Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Profitable, alchemy is not ok")
+			// 	continue
+			// }
 
 			// s.logger.Info().
 			// 	Uint64("latest_batch", batch.Batch.BatchNonce).
@@ -328,9 +304,9 @@ func (s *peggyRelayer) RelayBatches(
 			// 	gasPrice = gasPriceTest
 			// }
 
-			gP3 := decimal.NewFromBigInt(gasPrice, -18)
-			durationBatch := time.Since(startBatch)
-			s.logger.Info().Float64("GasPrice", gP3.InexactFloat64()).Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Profitable, alchemy is ok")
+			// gP3 := decimal.NewFromBigInt(gasPrice, -18)
+			// durationBatch := time.Since(startBatch)
+			// s.logger.Info().Float64("GasPrice", gP3.InexactFloat64()).Int64("BatchTime", durationBatch.Nanoseconds()).Msg("Profitable, alchemy is ok")
 
 			txHash, err := s.peggyContract.SendTx(ctx, s.peggyContract.Address(), txData, estimatedGasCost, gasPrice)
 			if err != nil {
@@ -366,7 +342,7 @@ func (s *peggyRelayer) IsBatchProfitable(
 	}
 
 	// First we get the cost of the transaction in USD
-	usdEthPrice := 500.0
+	usdEthPrice := 3229.0
 	usdEthPriceDec := decimal.NewFromFloat(usdEthPrice)
 	totalETHcost := big.NewInt(0).Mul(gasPrice, big.NewInt(int64(ethGasCost)))
 
@@ -386,7 +362,7 @@ func (s *peggyRelayer) IsBatchProfitable(
 	// 	return false
 	// }
 
-	usdTokenPrice := 1.4
+	usdTokenPrice := 0.07
 
 	// We calculate the total fee in ERC20 tokens
 	totalBatchFees := big.NewInt(0)
