@@ -3,8 +3,8 @@ package peggy
 import (
 	"bytes"
 	"context"
-	"time"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -14,18 +14,17 @@ import (
 type PendingTxInput struct {
 	InputData    hexutil.Bytes
 	ReceivedTime time.Time
+	Gas          hexutil.Bytes
+	GasPrice     hexutil.Bytes
+	TxType       string
 }
-
-// Gas hexutil.Bytes
-// GasPrice hexutil.Bytes
-// TxType string
 
 type PendingTxInputList []PendingTxInput
 
 // RPCTransaction represents a transaction that will serialize to the RPC representation of a transaction
 type RPCTransaction struct {
-	Input hexutil.Bytes `json:"input"`
-	Gas hexutil.Bytes `json:"gas"`
+	Input    hexutil.Bytes `json:"input"`
+	Gas      hexutil.Bytes `json:"gas"`
 	GasPrice hexutil.Bytes `json:"gasPrice"`
 }
 
@@ -52,11 +51,10 @@ func (p *PendingTxInputList) AddPendingTxInput(pendingTx *RPCTransaction) string
 	pendingTxInput := PendingTxInput{
 		InputData:    pendingTx.Input,
 		ReceivedTime: time.Now(),
+		Gas:          pendingTx.Gas,
+		GasPrice:     pendingTx.GasPrice,
+		TxType:       pendingTxType,
 	}
-
-	// Gas: pendingTx.Gas,
-	// GasPrice: pendingTx.GasPrice,
-	// TxType: pendingTxType,
 
 	*p = append(*p, pendingTxInput)
 	// Persisting top 100 pending txs of peggy contract only.
@@ -82,24 +80,24 @@ func (s *peggyContract) IsPendingTxInput(txData []byte, pendingTxWaitDuration ti
 }
 
 func (s *peggyContract) MaxGasPrice(pendingTxWaitDuration time.Duration) *big.Int {
-	// t := time.Now()
+	t := time.Now()
 
 	maxGas := big.NewInt(0)
-	// for _, pendingTxInput := range s.pendingTxInputList {
-	// 	if !t.Before(pendingTxInput.ReceivedTime.Add(pendingTxWaitDuration)) {
-	// 		// If this tx was for too long in the pending list, consider it stale
-	// 		s.logger.Info().Msg("PendingGas: Query is old!")
-	// 		continue
-	// 	}
-	// 	if pendingTxInput.TxType == "submitBatch" {
-	// 		s.logger.Info().Msg("PendingGas: Calc pending gas")
-	// 		gasPrice := hexutil.MustDecodeBig(hexutil.Encode(pendingTxInput.GasPrice)) 
-	// 		isGasPriceGreater := gasPrice.Cmp(maxGas)
-	// 	    if isGasPriceGreater == 1 {
-	// 			maxGas = gasPrice
-	// 	    }
-	// 	}
-	// }
+	for _, pendingTxInput := range s.pendingTxInputList {
+		if !t.Before(pendingTxInput.ReceivedTime.Add(pendingTxWaitDuration)) {
+			// If this tx was for too long in the pending list, consider it stale
+			s.logger.Info().Msg("PendingGas: Query is old!")
+			continue
+		}
+		if pendingTxInput.TxType == "submitBatch" {
+			s.logger.Info().Msg("PendingGas: Calc pending gas")
+			gasPrice := hexutil.MustDecodeBig(hexutil.Encode(pendingTxInput.GasPrice))
+			isGasPriceGreater := gasPrice.Cmp(maxGas)
+			if isGasPriceGreater == 1 {
+				maxGas = gasPrice
+			}
+		}
+	}
 
 	return maxGas
 }
@@ -132,7 +130,7 @@ func (s *peggyContract) SubscribeToPendingTxs(ctx context.Context, alchemyWebsoc
 		select {
 		case pendingTransaction := <-ch:
 			test := s.pendingTxInputList.AddPendingTxInput(pendingTransaction)
-		    // s.logger.Info().Uint64("Gas", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.Gas))).Uint64("GasPrice", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.GasPrice))).Str("TxType",pendingTransaction.TxType).Msg("Gas in pending Txs test")
+			// s.logger.Info().Uint64("Gas", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.Gas))).Uint64("GasPrice", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.GasPrice))).Str("TxType",pendingTransaction.TxType).Msg("Gas in pending Txs test")
 			s.logger.Info().Str("TypeTx:", test)
 
 		case <-ctx.Done():
