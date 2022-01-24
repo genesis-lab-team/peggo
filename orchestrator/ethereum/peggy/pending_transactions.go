@@ -40,7 +40,7 @@ func (p *PendingTxInputList) AddPendingTxInput(pendingTx *RPCTransaction) string
 	// Ref: https://docs.soliditylang.org/en/develop/abi-spec.html#function-selector
 	if !bytes.Equal(submitBatchMethod.ID, pendingTx.Input[:4]) &&
 		!bytes.Equal(valsetUpdateMethod.ID, pendingTx.Input[:4]) {
-		return ""
+		return "111"
 	}
 
 	pendingTxType := "updateValset"
@@ -129,9 +129,9 @@ func (s *peggyContract) SubscribeToPendingTxs(ctx context.Context, alchemyWebsoc
 	for {
 		select {
 		case pendingTransaction := <-ch:
-			test := s.pendingTxInputList.AddPendingTxInput(pendingTransaction)
+			test111 := s.pendingTxInputList.AddPendingTxInput(pendingTransaction)
 			// s.logger.Info().Uint64("Gas", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.Gas))).Uint64("GasPrice", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.GasPrice))).Str("TxType",pendingTransaction.TxType).Msg("Gas in pending Txs test")
-			s.logger.Info().Str("TypeTx:", test)
+			s.logger.Info().Str("TypeTx:", test111)
 
 		case <-ctx.Done():
 			return nil
