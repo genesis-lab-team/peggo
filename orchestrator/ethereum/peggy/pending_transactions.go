@@ -84,9 +84,11 @@ func (s *peggyContract) MaxGasPrice(pendingTxWaitDuration time.Duration) *big.In
 	for _, pendingTxInput := range s.pendingTxInputList {
 		if !t.Before(pendingTxInput.ReceivedTime.Add(pendingTxWaitDuration)) {
 			// If this tx was for too long in the pending list, consider it stale
+			s.logger.Info().Msg("PendingGas: Query is old!")
 			continue
 		}
 		if pendingTxInput.TxType == "submitBatch" {
+			s.logger.Info().Msg("PendingGas: Calc pending gas")
 			gasPrice := hexutil.MustDecodeBig(hexutil.Encode(pendingTxInput.GasPrice)) 
 			isGasPriceGreater := gasPrice.Cmp(maxGas)
 		    if isGasPriceGreater == 1 {
