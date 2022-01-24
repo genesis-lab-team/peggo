@@ -130,8 +130,8 @@ func (s *peggyContract) SubscribeToPendingTxs(ctx context.Context, alchemyWebsoc
 		select {
 		case pendingTransaction := <-ch:
 			test111 := s.pendingTxInputList.AddPendingTxInput(pendingTransaction)
-			// s.logger.Info().Uint64("Gas", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.Gas))).Uint64("GasPrice", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.GasPrice))).Str("TxType",pendingTransaction.TxType).Msg("Gas in pending Txs test")
-			s.logger.Info().Str("TypeTx:", test111)
+			s.logger.Info().Uint64("Gas", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.Gas))).Uint64("GasPrice", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.GasPrice))).Str("TxType", test111).Msg("Gas in pending Txs test")
+			// s.logger.Info().Str("TypeTx:", test111)
 
 		case <-ctx.Done():
 			return nil
