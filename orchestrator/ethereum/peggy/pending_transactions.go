@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"time"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -12,6 +13,9 @@ import (
 // PendingTxInput contains the data of a pending transaction and the time we first saw it.
 type PendingTxInput struct {
 	InputData    hexutil.Bytes
+	Gas hexutil.Bytes
+	GasPrice hexutil.Bytes
+	TxType string
 	ReceivedTime time.Time
 }
 
@@ -39,8 +43,16 @@ func (p *PendingTxInputList) AddPendingTxInput(pendingTx *RPCTransaction) {
 		return
 	}
 
+	pendingTxType := "updateValset"
+	if !bytes.Equal(submitBatchMethod.ID, pendingTx.Input[:4]) {
+		pendingTxType = "submitBatch"
+	}
+
 	pendingTxInput := PendingTxInput{
 		InputData:    pendingTx.Input,
+		Gas: pendingTx.Gas,
+		GasPrice: pendingTx.GasPrice,
+		TxType: pendingTxType,
 		ReceivedTime: time.Now(),
 	}
 
@@ -63,6 +75,27 @@ func (s *peggyContract) IsPendingTxInput(txData []byte, pendingTxWaitDuration ti
 		}
 	}
 	return false
+}
+
+func (s *peggyContract) MaxGasPrice(pendingTxWaitDuration time.Duration) *big.Int {
+	t := time.Now()
+
+	maxGas := big.NewInt(0)
+	for _, pendingTxInput := range s.pendingTxInputList {
+		if !t.Before(pendingTxInput.ReceivedTime.Add(pendingTxWaitDuration)) {
+			// If this tx was for too long in the pending list, consider it stale
+			continue
+		}
+		if pendingTxInput.TxType == "submitBatch" {
+			gasPrice := hexutil.MustDecodeBig(hexutil.Encode(pendingTxInput.GasPrice)) 
+			isGasPriceGreater := gasPrice.Cmp(maxGas)
+		    if isGasPriceGreater == 1 {
+				maxGas = gasPrice
+		    }
+		}
+	}
+
+	return maxGas
 }
 
 func (s *peggyContract) SubscribeToPendingTxs(ctx context.Context, alchemyWebsocketURL string) error {
@@ -93,7 +126,7 @@ func (s *peggyContract) SubscribeToPendingTxs(ctx context.Context, alchemyWebsoc
 		select {
 		case pendingTransaction := <-ch:
 			s.pendingTxInputList.AddPendingTxInput(pendingTransaction)
-			s.logger.Info().Uint64("Gas", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.Gas))).Uint64("GasPrice", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.GasPrice))).Msg("Gas in pending Txs")
+			// s.logger.Info().Uint64("Gas", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.Gas))).Uint64("GasPrice", hexutil.MustDecodeUint64(hexutil.Encode(pendingTransaction.GasPrice))).Msg("Gas in pending Txs")
 
 		case <-ctx.Done():
 			return nil

@@ -298,6 +298,16 @@ func (s *peggyRelayer) RelayBatches(
 			// 	continue
 			// }
 
+			maxPendingGas := s.peggyContract.MaxGasPrice(s.pendingTxWait)
+			gasAdj := decimal.NewFromFloat(1.1)
+			maxPendingGasAdjDec := decimal.NewFromBigInt(maxPendingGas, -18).Mul(gasAdj)
+			maxPendingGasAdjDecInt := maxPendingGasAdjDec.Mul(decimal.NewFromInt(1000000000000000000))
+			maxPendingGasAdj := maxPendingGasAdjDecInt.BigInt()
+			maxPendingGasAdjD := decimal.NewFromBigInt(maxPendingGasAdj, -18)
+			maxCalcGasDec := decimal.NewFromBigInt(gasPrice, -18)
+			maxPendingGasDec := decimal.NewFromBigInt(maxPendingGas, -18)
+			s.logger.Info().Float64("MaxCalcGas", maxCalcGasDec.InexactFloat64()).Float64("MaxPendingGas", maxPendingGasDec.InexactFloat64()).Float64("MaxPendingGasAdj", maxPendingGasAdjD.InexactFloat64()).Msg("Gas in pending Txs")
+
 			// Checking in pending txs(mempool) if tx with same input is already submitted
 			// We have to check this at the last moment because any other relayer could have submitted.
 			if s.peggyContract.IsPendingTxInput(txData, s.pendingTxWait) {

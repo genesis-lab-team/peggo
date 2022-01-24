@@ -90,6 +90,8 @@ type Contract interface {
 	// older than pendingTxWaitDuration, we consider it stale and return false, so the validator re-sends it.
 	IsPendingTxInput(txData []byte, pendingTxWaitDuration time.Duration) bool
 
+	MaxGasPrice(pendingTxWaitDuration time.Duration) *big.Int
+
 	GetPendingTxInputList() *PendingTxInputList
 }
 
